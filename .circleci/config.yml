@@ -1,7 +1,8 @@
 version: 2.1
 
+# use orbs of slack api
 orbs:
-  slack: circleci/slack@4.1
+  slack: circleci/slack@4.12.5
 
 commands:
   # destroy-environment:
