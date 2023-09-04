@@ -1,5 +1,5 @@
 Description: >
-  myUdaProject frontend stack.
+  myudaproject frontend stack.
 
 Parameters:
   ID:
@@ -10,7 +10,7 @@ Resources:
   WebsiteBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "myUdaProject-${ID}"
+      BucketName: !Sub "myudaproject-${ID}"
       AccessControl: PublicRead
       WebsiteConfiguration:
         IndexDocument: index.html

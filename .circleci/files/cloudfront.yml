@@ -1,5 +1,5 @@
 Description: >
-  Cloudfront distribution for myUdaProject.
+  Cloudfront distribution for myudaproject.
 
 Parameters:
   WorkflowID:
