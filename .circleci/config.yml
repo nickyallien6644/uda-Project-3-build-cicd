@@ -6,16 +6,19 @@ orbs:
 
 commands:
   destroy-environment:
-    description: Destroy back-end and front-end cloudformation stacks given a workflow ID.
+    description: Destroy back-end and front-end cloudformation stacks given a id.
     parameters:
-      # Add parameter here   
+      id:
+       type: string  
     steps:
       - run:
           name: Destroy environments
           when: on_fail
           command: |
-            # Your code here
-            exit 1
+            aws s3 rm s3://myudaproject-<< parameters.id >> --recursive
+            aws cloudformation delete-stack --stack-name myudaproject-frontend-<< parameters.id >>
+            aws cloudformation delete-stack --stack-name myudaproject-backend-<< parameters.id >>
+
 
   # revert-migrations:
   #   description: Revert the last migration if successfully run in the current workflow.
@@ -175,7 +178,8 @@ jobs:
           paths:
             - project/.circleci/ansible/inventory.txt
       # Here's where you will add some code to rollback on failure      
-
+      - destroy-environment:
+        id: ${CIRCLE_WORKFLOW_ID:0:7}
   configure-infrastructure:
     docker:
       - image: python:3.7-alpine3.11
@@ -202,7 +206,8 @@ jobs:
             cd ~
             pwd
       # Here's where you will add some code to rollback on failure      
-
+      - destroy-environment:
+        id: ${CIRCLE_WORKFLOW_ID:0:7}
   run-migrations:
     docker:
       - image: circleci/node:13.8.0
@@ -229,7 +234,8 @@ jobs:
                 curl --insecure https://kvdb.io/KwWGGSJXan9BwQHKtRj56W/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             fi
      # Here's where you will add some code to rollback on failure      
-
+      - destroy-environment:
+        id: ${CIRCLE_WORKFLOW_ID:0:7}
   deploy-frontend:
     docker:
       - image: amazon/aws-cli
@@ -260,7 +266,8 @@ jobs:
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
             aws s3 cp dist s3://myudaproject-backend-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       # Here's where you will add some code to rollback on failure      
-                    
+      - destroy-environment:
+        id: ${CIRCLE_WORKFLOW_ID:0:7}                    
   deploy-backend:
     docker:
       - image: amazon/aws-cli
@@ -296,7 +303,8 @@ jobs:
             cat inventory.txt
             ansible-playbook -i inventory.txt deploy-backend.yml
       # Here's where you will add some code to rollback on failure  
-
+      - destroy-environment:
+        id: ${CIRCLE_WORKFLOW_ID:0:7}
 #   smoke-test:
 #     docker:
 #       # Lightweight Docker image 
