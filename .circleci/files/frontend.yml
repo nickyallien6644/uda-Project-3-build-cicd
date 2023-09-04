@@ -11,7 +11,7 @@ Resources:
     Type: AWS::S3::Bucket
     Properties:
       BucketName: !Sub "myudaproject-${ID}"
-      PublicAccesBlockConfiguration:
+      PublicAccessBlockConfiguration:
         BlockPublicPolicy: false
       WebsiteConfiguration:
         IndexDocument: index.html
