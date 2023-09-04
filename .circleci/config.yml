@@ -212,8 +212,6 @@ jobs:
           name: Run migrations
           command: |
             cd backend
-            npm install
-            npm audit fix --audit-level=critical --force
             ## Run and save the migration output
             npm run migrations > ~/project/backend/migrations_dump.txt
       - run:
@@ -237,12 +235,8 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            sudo apt-get update
-            sudo apt-get install -y python3
-            sudo apt-get install -y ansible
-            curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -
-            sudo apt-get install -y nodejs
-            sudo apt-get install -y awscli
+            cd frontend
+            npm install
       - run:
           name: Get backend url
           command: |
