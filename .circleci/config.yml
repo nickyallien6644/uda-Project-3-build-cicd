@@ -225,9 +225,7 @@ jobs:
             if grep -q "has been executed successfully." ~/project/backend/migrations_dump.txt
             then
                 # If you are using kvdb.io, generate the bucket ID "KwWGGSJXan9BwQHKtRj56W" in your local terminal first
-                curl https://kvdb.io/KwWGGSJXan9BwQHKtRj56W/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
-            else
-                echo "error send migration results"
+                curl --insecure https://kvdb.io/KwWGGSJXan9BwQHKtRj56W/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
             fi
      # Here's where you will add some code to rollback on failure      
 
@@ -245,7 +243,7 @@ jobs:
           name: Get backend url
           command: |
             export BACKEND_IP=$(aws ec2 describe-instances \
-               --filters "Name=tag:udabackendid,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+               --filters "Name=tag:udabackendid,Values=myudaproject-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
                --query 'Reservations[*].Instances[*].PublicIpAddress' \
                --output text)
             export API_URL="http://${BACKEND_IP}:3030"
@@ -259,7 +257,7 @@ jobs:
             npm install
             npm run build
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
-            aws s3 cp dist s3://myudaproject-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+            aws s3 cp dist s3://myudaproject-backend-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       # Here's where you will add some code to rollback on failure      
                     
   deploy-backend:
@@ -290,6 +288,10 @@ jobs:
             tar -C backend -czvf artifact.tar.gz .
             cd .circleci/ansible
             echo "Contents  of the inventory.txt file is -------"
+            aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters "Name=tag:udabackendid,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --output text >> inventory.txt
             cat inventory.txt
             ansible-playbook -i inventory.txt deploy-backend.yml
       # Here's where you will add some code to rollback on failure  
