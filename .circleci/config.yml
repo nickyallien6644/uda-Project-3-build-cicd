@@ -213,7 +213,10 @@ jobs:
           command: |
             cd backend
             ## Run and save the migration output
+            npm install
+            npm audit fix --audit-level=critical --force
             npm audit fix --force
+            npm audit --audit-level=critical
             npm run migrations > ~/project/backend/migrations_dump.txt
       - run:
           name: Send migration results to kvdb.io
@@ -259,22 +262,37 @@ jobs:
             aws s3 cp dist s3://myudaproject-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       # Here's where you will add some code to rollback on failure      
                     
-#   deploy-backend:
-#     docker:
-#       # Docker image here that supports Ansible
-#     steps:
-#       # Checkout code from git
-#       # Add ssh keys with fingerprint
-#       # attach workspace
-#       - run:
-#           name: Install dependencies
-#           command: |
-#             # your code here
-#       - run:
-#           name: Deploy backend
-#           command: |
-#             # your code here
-#       # Here's where you will add some code to rollback on failure  
+  deploy-backend:
+    docker:
+      - image: amazon/aws-cli
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints: 
+          - "b5:f0:8d:8a:8e:4e:04:5a:a3:f1:4d:24:ae:5a:dd:de:84:c7:f9:90"
+      - attach_workspace:
+          at: .
+      - run:
+          name: Install dependencies
+          command: |
+            apk add --update --no-cache ansible curl rsync openssh nodejs npm tar 
+            ansible --version
+            pip install awscli
+            aws --version
+      - run:
+          name: Deploy backend
+          command: |
+            cd backend
+            npm i
+            npm run build
+            cd ..
+            ## Zip the directory
+            tar -C backend -czvf artifact.tar.gz .
+            cd .circleci/ansible
+            echo "Contents  of the inventory.txt file is -------"
+            cat inventory.txt
+            ansible-playbook -i inventory.txt deploy-backend.yml
+      # Here's where you will add some code to rollback on failure  
 
 #   smoke-test:
 #     docker:
