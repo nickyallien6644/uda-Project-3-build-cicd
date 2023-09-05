@@ -9,7 +9,8 @@ commands:
     description: Destroy back-end and front-end cloudformation stacks given a id.
     parameters:
       id:
-       type: string  
+       type: string
+       default: "${CIRCLE_WORKFLOW_ID:0:7}"  
     steps:
       - run:
           name: Destroy frontend environments
@@ -172,12 +173,12 @@ jobs:
             aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:project,Values=myudaproject-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --output text >> inventory.txt
-            cat inventory.txt
+              --output text >> inventory.ini
+            cat inventory.ini
       - persist_to_workspace:
           root: ~/
           paths:
-            - project/.circleci/ansible/inventory.txt
+            - project/.circleci/ansible/inventory.ini
       # Here's where you will add some code to rollback on failure      
       - destroy-environment: 
           id: "${CIRCLE_WORKFLOW_ID:0:7}"
@@ -190,7 +191,7 @@ jobs:
           fingerprints: 
           - "b5:f0:8d:8a:8e:4e:04:5a:a3:f1:4d:24:ae:5a:dd:de:84:c7:f9:90"
       - attach_workspace:
-          at: .
+          at: ~/
       - run:
           name: Install dependencies
           command: |
@@ -199,13 +200,9 @@ jobs:
       - run:
           name: Configure server
           command: |
-            pwd &&
-            ls -la
             cd .circleci/ansible
-            cat inventory.txt
-            ansible-playbook -i inventory.txt configure-server.yml
-            cd ~
-            pwd
+            cat inventory.ini
+            ansible-playbook -i inventory.ini configure-server.yml
       # Here's where you will add some code to rollback on failure      
       - destroy-environment: 
           id: "${CIRCLE_WORKFLOW_ID:0:7}"
@@ -295,13 +292,13 @@ jobs:
             ## Zip the directory
             tar -C backend -czvf artifact.tar.gz .
             cd .circleci/ansible
-            echo "Contents  of the inventory.txt file is -------"
+            echo "Contents  of the inventory.ini file is -------"
             aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:udabackendid,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --output text >> inventory.txt
-            cat inventory.txt
-            ansible-playbook -i inventory.txt deploy-backend.yml
+              --output text >> inventory.ini
+            cat inventory.ini
+            ansible-playbook -i inventory.ini deploy-backend.yml
       # Here's where you will add some code to rollback on failure  
       - destroy-environment: 
           id: "${CIRCLE_WORKFLOW_ID:0:7}"
