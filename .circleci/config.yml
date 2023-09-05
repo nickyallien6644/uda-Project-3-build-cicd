@@ -12,13 +12,16 @@ commands:
        type: string  
     steps:
       - run:
-          name: Destroy environments
+          name: Destroy frontend environments
           when: on_fail
           command: |
             aws s3 rm s3://myudaproject-<< parameters.id >> --recursive
             aws cloudformation delete-stack --stack-name myudaproject-frontend-<< parameters.id >>
+      - run:
+          name: Destroy backend environments
+          when: on_fail
+          command: |
             aws cloudformation delete-stack --stack-name myudaproject-backend-<< parameters.id >>
-
 
   # revert-migrations:
   #   description: Revert the last migration if successfully run in the current workflow.
@@ -90,12 +93,11 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          keys: [frontend-test]
+          keys: [frontend-build]
       - run:
           name: Font-end test
           command: |
             cd frontend
-            npm install
             npm run test
                 
   test-backend:
