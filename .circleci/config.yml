@@ -201,15 +201,12 @@ jobs:
     docker:
       - image: circleci/node:13.8.0
     steps:
-      - checkout
-      - restore_cache:
-          keys: [backend-build]  
-      - attach_workspace:
-          at: ~/    
+      - checkout  
       - run:
           name: Run migrations
           command: |
             cd backend
+            npm install
             ## Run and save the migration output
             npm run migrations > ~/project/backend/migrations_dump.txt
             cat ~/project/backend/migrations_dump.txt
@@ -262,8 +259,7 @@ jobs:
     steps:
       - checkout
       - add_ssh_keys:
-          fingerprints: 
-          - "b5:f0:8d:8a:8e:4e:04:5a:a3:f1:4d:24:ae:5a:dd:de:84:c7:f9:90"
+          fingerprints: "53:f3:62:b7:59:dd:e7:23:e4:a5:d8:a7:46:0c:78:c1"
       - attach_workspace:
           at: .
       - run:
