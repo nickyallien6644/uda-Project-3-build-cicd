@@ -269,7 +269,7 @@ jobs:
             npm install
             npm run build
             tar -czvf artifact-"${CIRCLE_WORKFLOW_ID:0:7}".tar.gz dist
-            aws s3 cp dist s3://myudaproject-backend-${CIRCLE_WORKFLOW_ID:0:7} --recursive
+            aws s3 cp dist s3://myudaproject-${CIRCLE_WORKFLOW_ID:0:7} --recursive
       # Here's where you will add some code to rollback on failure      
       - revert-migrations:
           id: "${CIRCLE_WORKFLOW_ID:0:7}"
