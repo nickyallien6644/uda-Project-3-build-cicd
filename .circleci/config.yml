@@ -35,7 +35,7 @@ commands:
           name: Revert migrations
           # Add when this will run
           command: |
-            SUCCESS=$(curl --insecure  https://kvdb.io/${KVDB_BUCKET_ID}/migration_<<parameters.workflow_id>>)
+            SUCCESS=$(curl --insecure  https://kvdb.io/${KVDB_BUCKET_ID}/migration_<<parameters.id>>)
             ls
             cd backend
             npm install
