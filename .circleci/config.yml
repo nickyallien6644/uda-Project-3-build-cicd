@@ -335,9 +335,14 @@ jobs:
           name: Install dependencies
           command: |
             # your code here
-            yum -y install curl
-            curl -sL https://rpm.nodesource.com/setup_14.x | bash -
-            yum install -y nodejs
+            apk add --no-cache \
+            tar gzip curl nodejs npm \
+            python3 \
+            py3-pip \
+            && pip3 install --upgrade pip \
+            && pip3 install \
+            awscli \
+            && rm -rf /var/cache/apk/*
       - run:
           name: Backend smoke test.
           command: |
