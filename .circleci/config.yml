@@ -345,7 +345,7 @@ jobs:
           name: Backend smoke test.
           command: |
             # your code here
-            export BACKEND_URL=$(curl --insecure https://kvdb.io/FWfT3EJvSc3D57Yhp76CdN/backendurl)
+            export BACKEND_URL=$(curl --insecure https://kvdb.io/KwWGGSJXan9BwQHKtRj56W/backendurl)
             echo $BACKEND_URL
             curl "$BACKEND_URL:3030/api/status"
             if curl "$BACKEND_URL:3030/api/status" | grep "ok"
