@@ -277,13 +277,11 @@ jobs:
           id: "${CIRCLE_WORKFLOW_ID:0:7}"                   
   deploy-backend:
     docker:
-      - image: amazon/aws-cli
+      - image: python:3.7-alpine3.11
     steps:
       - checkout
       - add_ssh_keys:
           fingerprints: "53:f3:62:b7:59:dd:e7:23:e4:a5:d8:a7:46:0c:78:c1"
-      - attach_workspace:
-          at: .
       - run:
           name: Install dependencies
           command: |
