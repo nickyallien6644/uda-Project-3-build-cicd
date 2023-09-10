@@ -144,7 +144,7 @@ jobs:
             --template-file .circleci/files/backend.yml \
             --stack-name "myudaproject-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
             --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  \
-            --tags project=myudaproject-backend-${CIRCLE_WORKFLOW_ID:0:7}
+            --tags project=myudaproject-backend
       - run:
           name: Ensure front-end infrastructure exist
           command: |
@@ -152,14 +152,14 @@ jobs:
               --template-file .circleci/files/frontend.yml \
               --stack-name "myudaproject-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  \
-              --tags project=myudaproject-frontend-${CIRCLE_WORKFLOW_ID:0:7}
+              --tags project=myudaproject-frontend
       - run:
           name: Add back-end ip to ansible inventory
           command: |
             cd .circleci/ansible
             aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:project,Values=myudaproject-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --filters "Name=tag:project,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --output text >> inventory.txt
             cat inventory.txt
       - persist_to_workspace:
@@ -251,7 +251,7 @@ jobs:
           name: Get backend url
           command: |
             export BACKEND_IP=$(aws ec2 describe-instances \
-               --filters "Name=tag:udabackendid,Values=myudaproject-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+               --filters "Name=tag:udabackendid,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
                --query 'Reservations[*].Instances[*].PublicIpAddress' \
                --output text)
             export API_URL="http://${BACKEND_IP}:3030"
@@ -311,13 +311,10 @@ jobs:
             echo TYPEORM_HOST=$TYPEORM_HOST >> "backend/.env"
             echo "=== .env ===="
             ## Zip the directory
+            cat backend/.env
             tar -C backend -czvf artifact.tar.gz .
             cd .circleci/ansible
             echo "Contents  of the inventory.txt file is -------"
-            aws ec2 describe-instances \
-              --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:udabackendid,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --output text >> inventory.txt
             cat inventory.txt
             ansible-playbook -i inventory.txt deploy-backend.yml
       # Here's where you will add some code to rollback on failure
@@ -347,7 +344,7 @@ jobs:
           name: Backend smoke test.
           command: |
             # your code here
-            BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters "Name=tag:project,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --output text)
+            BACKEND_IP=$(aws ec2 describe-instances --query 'Reservations[*].Instances[*].PublicIpAddress' --filters "Name=tag:udabackendid,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" --output text)
             API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"
             if curl "${API_URL}/api/status" | grep "ok"
