@@ -144,7 +144,7 @@ jobs:
             --template-file .circleci/files/backend.yml \
             --stack-name "myudaproject-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
             --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  \
-            --tags project=myudaproject-backend-${CIRCLE_WORKFLOW_ID:0:7}
+            --tags project=myudaproject-backend
       - run:
           name: Ensure front-end infrastructure exist
           command: |
@@ -152,16 +152,15 @@ jobs:
               --template-file .circleci/files/frontend.yml \
               --stack-name "myudaproject-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  \
-              --tags project=myudaproject-frontend-${CIRCLE_WORKFLOW_ID:0:7}
+              --tags project=myudaproject-frontend
       - run:
           name: Add back-end ip to ansible inventory
           command: |
-            cd .circleci/ansible
-            aws ec2 describe-instances \
-              --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:project,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --output text >> inventory.txt
-            cat inventory.txt
+            echo $(aws ec2 describe-instances \
+            --query 'Reservations[*].Instances[*].PublicDnsName' \
+            --filters "Name=tag:project,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+            --output text) >> ~/project/.circleci/ansible/inventory.txt
+            cat ~/project/.circleci/ansible/inventory.txt
       - persist_to_workspace:
           root: ~/
           paths:
@@ -203,7 +202,11 @@ jobs:
             pwd &&
             ls -la
             cd .circleci/ansible
+            echo "********** inventory.txt data **********"
             cat inventory.txt
+            export ANSIBLE_HOST_KEY_CHECKING=False
+            export RECORD_HOST_KEYS=False
+            export ANSIBLE_PARAMIKO_BANNER_TIMEOUT=60
             ansible-playbook -i inventory.txt configure-server.yml
             cd ~
             pwd
@@ -251,7 +254,7 @@ jobs:
           name: Get backend url
           command: |
             export BACKEND_IP=$(aws ec2 describe-instances \
-               --filters "Name=tag:project,Values=myudaproject-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+               --filters "Name=tag:project,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
                --query 'Reservations[*].Instances[*].PublicIpAddress' \
                --output text)
             export API_URL="http://${BACKEND_IP}:3030"
