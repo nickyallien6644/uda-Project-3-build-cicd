@@ -285,9 +285,12 @@ jobs:
     steps:
       - checkout
       - add_ssh_keys:
-          fingerprints: ["8a:5c:5c:4e:3f:1f:e2:e8:97:4b:0f:3a:5a:73:e9:e9"]
+          fingerprints: 
+          - "8a:5c:5c:4e:3f:1f:e2:e8:97:4b:0f:3a:5a:73:e9:e9"
       - attach_workspace:
-          at: ~/
+          at: ./
+      - restore_cache:
+          keys: [backend-build]
       - run:
           name: Install dependencies
           command: |
@@ -295,35 +298,23 @@ jobs:
             ansible --version
             pip install awscli
             aws --version
-      - restore_cache:
-          keys: [backend-build]
+
       - run:
           name: Deploy backend
           command: |
+            echo "Contents  of the inventory.txt file is -------"
+            BACKEND_IP=$(aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters "Name=tag:udabackendid,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --output text >> inventory.txt)
+            echo $BACKEND_IP >> .circleci/ansible/inventory.txt
+            cat .circleci/ansible/inventory.txt
             cd backend
             npm install
             npm run build
             cd ..
-            echo ENVIROMENT=production > "backend/.env"
-            echo TYPEORM_CONNECTION=$TYPEORM_CONNECTION >> "backend/.env"
-            echo TYPEORM_MIGRATIONS_DIR=$TYPEORM_MIGRATIONS_DIR >> "backend/.env"
-            echo TYPEORM_ENTITIES=$TYPEORM_ENTITIES >> "backend/.env"
-            echo TYPEORM_PORT=$TYPEORM_PORT >> "backend/.env"
-            echo TYPEORM_USERNAME=$TYPEORM_USERNAME >> "backend/.env"
-            echo TYPEORM_PASSWORD=$TYPEORM_PASSWORD >> "backend/.env"
-            echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> "backend/.env"
-            echo TYPEORM_HOST=$TYPEORM_HOST >> "backend/.env"
-            echo "=== .env ===="
-            ## Zip the directory
-            tar -C backend -czvf artifact.tar.gz .
-            cd .circleci/ansible
-            echo "Contents  of the inventory.txt file is -------"
-            aws ec2 describe-instances \
-              --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:udabackendid,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --output text >> inventory.txt
-            cat inventory.txt
-            ansible-playbook -i inventory.txt deploy-backend.yml
+            export ANSIBLE_HOST_KEY_CHECKING=False
+            ansible-playbook -i .circleci/ansible/inventory.ini .circleci/ansible/deploy-backend.yml -vvv
       # Here's where you will add some code to rollback on failure
       - revert-migrations:
           id: "${CIRCLE_WORKFLOW_ID:0:7}"  
