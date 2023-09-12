@@ -298,19 +298,26 @@ jobs:
             ansible --version
             pip install awscli
             aws --version
-
       - run:
           name: Deploy backend
           command: |
+            cd backend
+            npm install
+            npm run build
+            cd ..
+            pwd
+            cd /root/project
+            tar -C backend -czvf artifact.tar.gz .
+            cd .circleci/ansible
             echo "Contents  of the inventory.txt file is -------"
             BACKEND_IP=$(aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:udabackendid,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --filters "Name=tag:project,Values=myudaproject-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
               --output text >> inventory.txt)
             echo $BACKEND_IP >> .circleci/ansible/inventory.txt
             cat .circleci/ansible/inventory.txt
             export ANSIBLE_HOST_KEY_CHECKING=False
-            ansible-playbook -i .circleci/ansible/inventory.ini .circleci/ansible/deploy-backend.yml -vvv
+            ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml -vvv
       # Here's where you will add some code to rollback on failure
       - revert-migrations:
           id: "${CIRCLE_WORKFLOW_ID:0:7}"  
