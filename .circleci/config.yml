@@ -175,7 +175,8 @@ jobs:
     steps:
       - checkout
       - add_ssh_keys:
-          fingerprints: ["8a:5c:5c:4e:3f:1f:e2:e8:97:4b:0f:3a:5a:73:e9:e9"]
+          fingerprints: 
+          - "d3:63:4f:cf:b5:5c:64:8a:90:04:65:71:c4:93:ab:47"
       - attach_workspace:
           at: ~/
       - run:
@@ -187,6 +188,7 @@ jobs:
       - run:
           name: Configure variable
           command: |
+            echo ENVIROMENT=production >> "backend/.env"
             echo TYPEORM_CONNECTION=$TYPEORM_CONNECTION >> backend/.env
             echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> backend/.env
             echo TYPEORM_ENTITIES=$TYPEORM_ENTITIES >> backend/.env
@@ -286,7 +288,7 @@ jobs:
       - checkout
       - add_ssh_keys:
           fingerprints: 
-          - "8a:5c:5c:4e:3f:1f:e2:e8:97:4b:0f:3a:5a:73:e9:e9"
+          - "d3:63:4f:cf:b5:5c:64:8a:90:04:65:71:c4:93:ab:47"
       - attach_workspace:
           at: ./
       - restore_cache:
@@ -305,15 +307,11 @@ jobs:
             npm install
             npm run build
             cd ..
-            cd /root/project
             tar -C backend -czvf artifact.tar.gz .
             cd .circleci/ansible
-            aws ec2 describe-instances \
-              --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:project,Values=myudaproject-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --output text >> inventory.txt
+            echo "Contents of the inventory.txt file is ----"
             cat inventory.txt
-            ansible-playbook -i inventory.txt deploy-backend.yml
+            ansible-playbook -i inventory.txt deploy-backend.yml  
       # Here's where you will add some code to rollback on failure
       - revert-migrations:
           id: "${CIRCLE_WORKFLOW_ID:0:7}"  
