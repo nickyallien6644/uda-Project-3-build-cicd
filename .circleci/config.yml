@@ -304,11 +304,27 @@ jobs:
             npm install
             npm run build
             cd ..
+<<<<<<< HEAD
             tar -C backend -czvf artifact.tar.gz .
             cd .circleci/ansible
             echo "Contents of the inventory.txt file is ----"
             cat inventory.txt
             ansible-playbook -i inventory.txt deploy-backend.yml  
+=======
+            pwd
+            cd /root/project
+            tar -C backend -czvf artifact.tar.gz .
+            cd .circleci/ansible
+            echo "Contents  of the inventory.txt file is -------"
+            BACKEND_IP=$(aws ec2 describe-instances \
+              --query 'Reservations[*].Instances[*].PublicIpAddress' \
+              --filters "Name=tag:project,Values=myudaproject-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+              --output text >> inventory.txt)
+            echo $BACKEND_IP >> .circleci/ansible/inventory.txt
+            cat .circleci/ansible/inventory.txt
+            export ANSIBLE_HOST_KEY_CHECKING=False
+            ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml -vvv
+>>>>>>> parent of 341e249 (update deploy backend)
       # Here's where you will add some code to rollback on failure
       - revert-migrations:
           id: "${CIRCLE_WORKFLOW_ID:0:7}"  
