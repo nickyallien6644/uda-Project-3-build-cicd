@@ -1,56 +1,23 @@
 ---
-- name: Creates directory
+- name: Create directory
+  become: yes
   file:
-    path: ~/backend_ec2
+    path: /home/ubuntu/backend
     state: directory
-- name: "Update apt packages."
-  become: true
-  apt:
-    update_cache: yes
-- name: "Add Node 13"
-  become: true
-  shell: |
-    curl -sL https://deb.nodesource.com/setup_13.x | sudo -E bash -
-- name: "Install node 13"
-  become: true
-  apt:
-    name: ["nodejs"]
-    update_cache: yes
-- name: "Install pm2"
-  become: true
-  npm:
-    name: pm2
-    global: yes
-    production: yes
-    state: present
-- name: Copy folder to host
-  copy:
+
+- name: Copy compressed backend folder
+  become: yes
+  unarchive:
     src: ~/project/artifact.tar.gz
-    dest: ~/backend_ec2 
-- name: extract backend_ec2 files
-  become: true
-  environment:
-    ENVIRONMENT: production
-    NODE_ENV: production
-    TYPEORM_CONNECTION: "{{ lookup('env', 'TYPEORM_CONNECTION') }}"  
-    TYPEORM_ENTITIES: "{{ lookup('env', 'TYPEORM_ENTITIES') }}"
-    TYPEORM_HOST: "{{ lookup('env', 'TYPEORM_HOST') }}"
-    TYPEORM_PORT: "{{ lookup('env', 'TYPEORM_PORT') }}"
-    TYPEORM_USERNAME: "{{ lookup('env', 'TYPEORM_USERNAME') }}"
-    TYPEORM_PASSWORD: "{{ lookup('env', 'TYPEORM_PASSWORD') }}"
-    TYPEORM_DATABASE: "{{ lookup('env', 'TYPEORM_DATABASE') }}"
-    TYPEORM_MIGRATIONS: "{{ lookup('env', 'TYPEORM_MIGRATIONS')}}"
-    TYPEORM_MIGRATIONS_DIR: "{{ lookup('env', 'TYPEORM_MIGRATIONS_DIR')}}"
-  shell: |
-    cd /home/ubuntu/backend_ec2
-    tar -vxf artifact.tar.gz
-    rm artifact.tar.gz
-- name: start backend
-  shell: |
-    cd ~/backend_ec2/dist
-    pm2 stop default
-    pm2 start npm -- start
-    pm2 ls
-- name: Sleep 10s to wait server before smoke-test
-  ansible.builtin.pause:
-    seconds: 10
+    dest: /home/ubuntu/backend
+    owner: ubuntu
+
+- name: Run the web server
+  become: yes
+  shell:
+    cmd: |
+      cd /home/ubuntu/backend
+      npm install
+      pm2 stop backend
+      pm2 delete backend
+      pm2 start npm -- start
