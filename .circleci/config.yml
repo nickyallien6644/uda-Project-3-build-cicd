@@ -411,30 +411,40 @@ jobs:
       - persist_to_workspace:
           root: ~/
           paths:
-            - textfile.txt
+            - WorkflowID02.txt
        # Here's where you will add some code to rollback on failure  
       - destroy-environment: 
           id: "${CIRCLE_WORKFLOW_ID:0:7}"
       - revert-migrations:
           id: "${CIRCLE_WORKFLOW_ID:0:7}"
-# cleanup:
-#     docker:
-#       # Docker image here
-#     steps:
-#       # Checkout code from git
-#       - run:
-#           name: Get old stack workflow id
-#           command: |
-#             # your code here
-#             export OldWorkflowID="the id here"
-#             export STACKS=[] #put the list of stacks here
-#       - run:
-#           name: Remove old stacks and files
-#           command: |
-#             if [[ "${STACKS[@]}" =~ "${OldWorkflowID}" ]]
-#             then
-#               # your code here
-#             fi
+cleanup:
+    docker:
+      # Docker image here
+      - image: amazon/aws-cli
+    steps:
+      # Checkout code from git
+      - checkout
+      - run:
+          name: Install dependencies
+          command: |
+            yum install -y tar gzip
+      - attach_workspace:
+          at: ~/
+      - run:
+          name: Clean up
+          command: |
+            # your code here
+            cat ~/WorkflowID02.txt
+            WorkflowID02=$(cat ~/WorkflowID02.txt)
+            echo WorkflowIDold: ${WorkflowID02}
+            if [[ "${WorkflowID02}" != "${CIRCLE_WORKFLOW_ID:0:7}"  ]]
+            then
+              aws s3 rm "s3://myudaproject-${WorkflowID02}" --recursive
+              aws cloudformation delete-stack --stack-name "myudaproject-backend-${WorkflowID02}"
+              aws cloudformation delete-stack --stack-name "myudaproject-frontend-${WorkflowID02}"
+            else
+              echo "Job Can not Clean up"
+            fi
             
 
 workflows:
@@ -467,5 +477,5 @@ workflows:
           requires: [deploy-backend, deploy-frontend]
       - cloudfront-update:
           requires: [smoke-test]
-      # - cleanup:
-      #     requires: [cloudfront-update]
+      - cleanup:
+          requires: [cloudfront-update]
