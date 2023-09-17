@@ -156,12 +156,14 @@ jobs:
       - run:
           name: Add back-end ip to ansible inventory
           command: |
-            cd .circleci/ansible
-            aws ec2 describe-instances \
-              --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:project,Values=myudaproject-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --output text >> inventory.txt
-            cat inventory.txt
+            BACKEND_PUBLIC_IP=$(
+              aws ec2 describe-instances \
+               --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+               --query 'Reservations[*].Instances[*].PublicIpAddress' \
+               --output text
+               )
+            echo $BACKEND_PUBLIC_IP >> .circleci/ansible/inventory.txt
+            curl --insecure https://kvdb.io/KwWGGSJXan9BwQHKtRj56W/migration_${CIRCLE_WORKFLOW_ID:0:7}  -d '1'
       - persist_to_workspace:
           root: ~/
           paths:
@@ -185,7 +187,7 @@ jobs:
       - run:
           name: Configure variable
           command: |
-            echo ENVIROMENT=production >> "backend/.env"
+            echo ENVIROMENT=production > "backend/.env"
             echo TYPEORM_CONNECTION=$TYPEORM_CONNECTION >> backend/.env
             echo TYPEORM_DATABASE=$TYPEORM_DATABASE >> backend/.env
             echo TYPEORM_ENTITIES=$TYPEORM_ENTITIES >> backend/.env
@@ -198,18 +200,11 @@ jobs:
             cat backend/.env
       - run:
           name: Configure server
+          working_directory: ./.circleci/ansible
           command: |
-            pwd &&
-            ls -la
-            cd .circleci/ansible
             echo "********** inventory.txt data **********"
             cat inventory.txt
-            export ANSIBLE_HOST_KEY_CHECKING=False
-            export RECORD_HOST_KEYS=False
-            export ANSIBLE_PARAMIKO_BANNER_TIMEOUT=60
             ansible-playbook -i inventory.txt configure-server.yml
-            cd ~
-            pwd
       # Here's where you will add some code to rollback on failure      
       - destroy-environment: 
           id: "${CIRCLE_WORKFLOW_ID:0:7}"
