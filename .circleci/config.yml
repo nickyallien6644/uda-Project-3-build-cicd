@@ -38,7 +38,7 @@ commands:
           command: |
             SUCCESS=$(curl --insecure  https://kvdb.io/${KVDB_BUCKET_ID}/migration_<<parameters.id>>)
             ls
-            cd backend
+            cd ~/project/backend
             npm install
             npm run migrations:revert
   install_awscli:
@@ -338,6 +338,8 @@ jobs:
             # your code here
             apk add --update curl
             pip install awscli
+            curl -sL https://rpm.nodesource.com/setup_14.x | bash -
+            yum install -y nodejs
       - run:
           name: Backend smoke test.
           command: |
