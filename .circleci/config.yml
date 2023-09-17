@@ -245,24 +245,21 @@ jobs:
             yum install -y tar gzip curl
             curl -sL https://rpm.nodesource.com/setup_10.x | bash -
             yum install -y nodejs   
+      - restore_cache:
+          keys: [frontend-build]
       - run:
           name: Get backend url
           command: |
-            export BACKEND_IP=$(
-            aws ec2 describe-instances \
-              --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:project,Values=myudaproject-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --output text
-              )
+            export BACKEND_PUBLIC_IP=$(
+              aws ec2 describe-instances \
+               --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+               --query 'Reservations[*].Instances[*].PublicIpAddress' \
+               --output text
+               )
             export API_URL="http://${BACKEND_IP}:3030"
             echo "API_URL = ${API_URL}"
-            echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
-            echo API_URL="http://${BACKEND_IP}:3030" >> frontend/environment.txt
-            cat frontend/.env
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - project/frontend/.env
+            echo API_URL="http://${BACKEND_IP}:3030" >> .env
+            cat .env
       - run:
           name: Deploy frontend objects
           command: |
@@ -289,6 +286,7 @@ jobs:
           keys: [backend-build]
       - run:
           name: Install dependencies
+          working_directory: /tmp
           command: |
             apk add --update --no-cache ansible curl rsync openssh nodejs npm tar 
             ansible --version
@@ -297,19 +295,20 @@ jobs:
       - run:
           name: Deploy backend
           command: |
+            BACKEND_PUBLIC_IP=$(
+              aws ec2 describe-instances \
+               --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+               --query 'Reservations[*].Instances[*].PublicIpAddress' \
+               --output text
+               )
+            echo $BACKEND_PUBLIC_IP >> .circleci/ansible/inventory.txt
+            cat .circleci/ansible/inventory.txt
             cd backend
             npm install
             npm run build
-            cd ..
-            cd /root/project
-            tar -C backend -czvf artifact.tar.gz .
-            cd .circleci/ansible
-            aws ec2 describe-instances \
-              --query 'Reservations[*].Instances[*].PublicIpAddress' \
-              --filters "Name=tag:project,Values=myudaproject-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --output text >> inventory.txt
-            cat inventory.txt
-            ansible-playbook -i inventory.txt deploy-backend.yml
+            cd ..            
+            export ANSIBLE_HOST_KEY_CHECKING=False
+            ansible-playbook -i .circleci/ansible/inventory.txt .circleci/ansible/deploy-backend.yml -vvv
       # Here's where you will add some code to rollback on failure
       - revert-migrations:
           id: "${CIRCLE_WORKFLOW_ID:0:7}"  
