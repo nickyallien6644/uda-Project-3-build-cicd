@@ -141,18 +141,18 @@ jobs:
           name: Ensure back-end infrastructure exists
           command: |
             aws cloudformation deploy \
-              --template-file .circleci/files/backend.yml \
-              --tags project=backend-${CIRCLE_WORKFLOW_ID:0:7} \
-              --stack-name myudaproject-backend-${CIRCLE_WORKFLOW_ID:0:7} \
-              --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:7}
+            --template-file .circleci/files/backend.yml \
+            --stack-name "myudaproject-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
+            --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  \
+            --tags project=myudaproject-backend-${CIRCLE_WORKFLOW_ID:0:7}
       - run:
           name: Ensure front-end infrastructure exist
           command: |
             aws cloudformation deploy \
-              --template-file .circleci/files/frontend.yml \
-              --tags project=frontend-${CIRCLE_WORKFLOW_ID:0:7} \
-              --stack-name myudaproject-frontend-${CIRCLE_WORKFLOW_ID:0:7} \
-              --parameter-overrides ID=${CIRCLE_WORKFLOW_ID:0:7}
+            --template-file .circleci/files/frontend.yml \
+            --stack-name "myudaproject-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
+            --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  \
+            --tags project=myudaproject-frontend-${CIRCLE_WORKFLOW_ID:0:7}
       - run:
           name: Add back-end ip to ansible inventory
           command: |
@@ -255,10 +255,12 @@ jobs:
       - run:
           name: Get backend url
           command: |
-            export BACKEND_IP=$(aws ec2 describe-instances \
+            export BACKEND_IP=$(
+            aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:project,Values=myudaproject-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --output text)
+              --output text
+              )
             export API_URL="http://${BACKEND_IP}:3030"
             echo "API_URL = ${API_URL}"
             echo API_URL="http://${BACKEND_IP}:3030" >> frontend/.env
@@ -343,10 +345,12 @@ jobs:
           name: Backend smoke test.
           command: |
             # your code here
-            export BACKEND_IP=$(aws ec2 describe-instances \
+            export BACKEND_IP=$(
+            aws ec2 describe-instances \
               --query 'Reservations[*].Instances[*].PublicIpAddress' \
               --filters "Name=tag:project,Values=myudaproject-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
-              --output text)
+              --output text
+              )
             export API_URL="http://${BACKEND_IP}:3030"
             echo "${API_URL}"  #   curl -s ${API_URL}/api/status -v 
             if curl -s ${API_URL}/api/status | grep "ok"
