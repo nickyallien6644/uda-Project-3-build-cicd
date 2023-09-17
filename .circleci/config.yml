@@ -144,7 +144,7 @@ jobs:
             --template-file .circleci/files/backend.yml \
             --stack-name "myudaproject-backend-${CIRCLE_WORKFLOW_ID:0:7}" \
             --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  \
-            --tags project=myudaproject-backend-${CIRCLE_WORKFLOW_ID:0:7}
+            --tags project=myudaproject-backend
       - run:
           name: Ensure front-end infrastructure exist
           command: |
@@ -152,7 +152,7 @@ jobs:
             --template-file .circleci/files/frontend.yml \
             --stack-name "myudaproject-frontend-${CIRCLE_WORKFLOW_ID:0:7}" \
             --parameter-overrides ID="${CIRCLE_WORKFLOW_ID:0:7}"  \
-            --tags project=myudaproject-frontend-${CIRCLE_WORKFLOW_ID:0:7}
+            --tags project=myudaproject-frontend
       - run:
           name: Add back-end ip to ansible inventory
           command: |
@@ -182,8 +182,6 @@ jobs:
           name: Install dependencies
           command: |
             apk add --update ansible
-      - attach_workspace:
-          at: ~/
       - run:
           name: Configure variable
           command: |
