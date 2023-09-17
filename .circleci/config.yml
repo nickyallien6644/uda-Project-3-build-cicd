@@ -417,34 +417,34 @@ jobs:
           id: "${CIRCLE_WORKFLOW_ID:0:7}"
       - revert-migrations:
           id: "${CIRCLE_WORKFLOW_ID:0:7}"
-cleanup:
-    docker:
-      # Docker image here
-      - image: amazon/aws-cli
-    steps:
-      # Checkout code from git
-      - checkout
-      - run:
-          name: Install dependencies
-          command: |
-            yum install -y tar gzip
-      - attach_workspace:
-          at: ~/
-      - run:
-          name: Clean up
-          command: |
-            # your code here
-            cat ~/WorkflowID02.txt
-            WorkflowID02=$(cat ~/WorkflowID02.txt)
-            echo WorkflowIDold: ${WorkflowID02}
-            if [[ "${WorkflowID02}" != "${CIRCLE_WORKFLOW_ID:0:7}"  ]]
-            then
-              aws s3 rm "s3://myudaproject-${WorkflowID02}" --recursive
-              aws cloudformation delete-stack --stack-name "myudaproject-backend-${WorkflowID02}"
-              aws cloudformation delete-stack --stack-name "myudaproject-frontend-${WorkflowID02}"
-            else
-              echo "Job Can not Clean up"
-            fi
+  cleanup:
+      docker:
+        # Docker image here
+        - image: amazon/aws-cli
+      steps:
+        # Checkout code from git
+        - checkout
+        - run:
+            name: Install dependencies
+            command: |
+              yum install -y tar gzip
+        - attach_workspace:
+            at: ~/
+        - run:
+            name: Cleanup
+            command: |
+              # your code here
+              cat ~/WorkflowID02.txt
+              WorkflowID02=$(cat ~/WorkflowID02.txt)
+              echo WorkflowIDold: ${WorkflowID02}
+              if [[ "${WorkflowID02}" != "${CIRCLE_WORKFLOW_ID:0:7}"  ]]
+              then
+                aws s3 rm "s3://myudaproject-${WorkflowID02}" --recursive
+                aws cloudformation delete-stack --stack-name "myudaproject-backend-${WorkflowID02}"
+                aws cloudformation delete-stack --stack-name "myudaproject-frontend-${WorkflowID02}"
+              else
+                echo "Job Can not Clean up"
+              fi
             
 
 workflows:
