@@ -338,7 +338,6 @@ jobs:
             # your code here
             apk add --update curl
             pip install awscli
-            curl -sL https://rpm.nodesource.com/setup_14.x | bash -
             yum install -y nodejs
       - run:
           name: Backend smoke test.
