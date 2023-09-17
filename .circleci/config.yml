@@ -266,9 +266,9 @@ jobs:
                --query 'Reservations[*].Instances[*].PublicIpAddress' \
                --output text
                )
-            export API_URL="http://${BACKEND_IP}:3030"
+            export API_URL="http://${BACKEND_PUBLIC_IP}:3030"
             echo "API_URL = ${API_URL}"
-            echo API_URL="http://${BACKEND_IP}:3030" >> .env
+            echo API_URL="http://${BACKEND_PUBLIC_IP}:3030" >> .env
             cat .env
       - run:
           name: Deploy frontend objects
@@ -342,7 +342,7 @@ jobs:
           command: |
             # your code here
             export BACKEND_URL=$(
-              curl --insecure https://kvdb.io/KwWGGSJXan9BwQHKtRj56W/backendurl
+              curl --insecure https://kvdb.io/KwWGGSJXan9BwQHKtRj56W/migration_${CIRCLE_WORKFLOW_ID:0:7}
             )
             echo $BACKEND_URL
             curl "$BACKEND_URL:3030/api/status"
