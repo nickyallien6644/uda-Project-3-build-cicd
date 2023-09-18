@@ -396,27 +396,22 @@ jobs:
               awscli \
               && rm -rf /var/cache/apk/*
       - run:
+          name: Get old version of workflow id
+          command: |
+            aws cloudformation list-exports --query "Exports[?Name==\`WorkflowID\`].Value" --no-paginate --output text
+      - run:
           name: Update cloudfront distribution
           command: |
             # your code here
-            # save old version to file
-            aws cloudformation list-exports --query "Exports[?Name==\`WorkflowID\`].Value" --no-paginate --output text > ~/oldWorkflowId.txt
-            export value=$(cat ~/oldWorkflowId.txt)
-
-            echo "***Before create new Workflow Id***"
-
-            echo "OLD_WORKFLOW_ID: $value"
-
+            aws cloudformation list-exports --query "Exports[?Name==\`WorkflowID\`].Value" --no-paginate --output text >> ~/oldWorkflowId.txt 
+            
             aws cloudformation deploy \
               --template-file .circleci/files/cloudfront.yml \
               --stack-name InitialStack \
               --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
               --tags project=myudaproject
 
-            echo "***After create new Workflow Id***"
-
-            echo "OLD_WORKFLOW_ID: $value"
-            echo Current Workflow ID: "${CIRCLE_WORKFLOW_ID:0:7}"
+            echo CIRCLE_WORKFLOW_ID "${CIRCLE_WORKFLOW_ID:0:7}"
       - persist_to_workspace:
           root: ~/
           paths:
@@ -439,6 +434,16 @@ jobs:
             name: Install dependencies
             command: |
               pip install awscli
+        - run:
+            name: Get old version of workflow id
+            command: |
+              # Fetch the Old workflow ID
+              export OldWorkflowID=$(aws cloudformation list-exports --query "Exports[?Name==\`WorkflowID\`].Value" --no-paginate --output text)
+              echo OldWorkflowID: "${OldWorkflowID}"
+              echo CIRCLE_WORKFLOW_ID "${CIRCLE_WORKFLOW_ID:0:7}"
+              # Fetch the stack names          
+              export STACKS=($(aws cloudformation list-stacks --query "StackSummaries[*].StackName" --stack-status-filter CREATE_COMPLETE --no-paginate --output text)) 
+              echo Stack names: "${STACKS[@]}"
         - run:
             name: Cleanup
             command: |
