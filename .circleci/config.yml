@@ -400,11 +400,7 @@ jobs:
           command: |
             # your code here
             # save old version to file
-            export OLD_WORKFLOW_ID=$(aws cloudformation \
-                  list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
-                  --no-paginate --output text
-            )
-            echo ${OLD_WORKFLOW_ID} >> ~/oldWorkflowId.txt
+            aws cloudformation list-exports --query "Exports[?Name==\`WorkflowID\`].Value" --no-paginate --output text > ~/oldWorkflowId.txt
             cat ~/oldWorkflowId.txt
 
             aws cloudformation deploy \
@@ -413,7 +409,8 @@ jobs:
               --parameter-overrides WorkflowID="myudaproject-${CIRCLE_WORKFLOW_ID:0:7}" \
               --tags project=myudaproject
 
-            echo OLD_WORKFLOW_ID:  "${OLD_WORKFLOW_ID}"
+            echo OLD_WORKFLOW_ID:  
+            cat ~/oldWorkflowId.txt
             echo Current Workflow ID: "${CIRCLE_WORKFLOW_ID:0:7}"
       - persist_to_workspace:
           root: ~/
