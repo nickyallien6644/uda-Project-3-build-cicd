@@ -384,12 +384,12 @@ jobs:
       # Checkout code from git
       - checkout
       - run:
-        name: Install dependencies
-        command: |
-          # your code here
-          yum -y install curl
-          curl -sL https://rpm.nodesource.com/setup_14.x | bash -
-          yum install -y nodejs
+          name: Install dependencies
+          command: |
+            # your code here
+            yum -y install curl
+            curl -sL https://rpm.nodesource.com/setup_14.x | bash -
+            yum install -y nodejs
       - run:
           name: Get old version of workflow id
           command: |
