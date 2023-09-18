@@ -399,19 +399,26 @@ jobs:
           name: Update cloudfront distribution
           command: |
             # your code here
-            export WorkflowID02=$(aws cloudformation \
+            # save old version to file
+            export OLD_WORKFLOW_ID=$(aws cloudformation \
                   list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
-                  --no-paginate --output text)
-            echo ${WorkflowID02} >> ~/WorkflowID02.txt
+                  --no-paginate --output text
+            )
+            echo ${OLD_WORKFLOW_ID} >> ~/oldWorkflowId.txt
+            cat ~/oldWorkflowId.txt
+
             aws cloudformation deploy \
               --template-file .circleci/files/cloudfront.yml \
               --stack-name InitialStack \
               --parameter-overrides WorkflowID="myudaproject-${CIRCLE_WORKFLOW_ID:0:7}" \
               --tags project=myudaproject
+
+            echo OLD_WORKFLOW_ID:  "${OLD_WORKFLOW_ID}"
+            echo Current Workflow ID: "${CIRCLE_WORKFLOW_ID:0:7}"
       - persist_to_workspace:
           root: ~/
           paths:
-            - WorkflowID02.txt
+            - oldWorkflowId.txt
        # Here's where you will add some code to rollback on failure  
       - destroy-environment: 
           id: "${CIRCLE_WORKFLOW_ID:0:7}"
@@ -434,7 +441,8 @@ jobs:
             name: Cleanup
             command: |
               # your code here
-              export OLD_WORKFLOW_ID=$(cat ~/WorkflowID02.txt)
+              cat ~/oldWorkflowId.txt
+              export OLD_WORKFLOW_ID=$(cat ~/oldWorkflowId.txt)
               echo "OLD_WORKFLOW_ID::: $OLD_WORKFLOW_ID"
               if [[ ! -z "${OLD_WORKFLOW_ID}" && "${CIRCLE_WORKFLOW_ID:0:7}" != "${OLD_WORKFLOW_ID}" ]]; then
                   aws s3 rm "s3://myudaproject-${OLD_WORKFLOW_ID}" --recursive
