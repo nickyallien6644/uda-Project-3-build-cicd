@@ -166,7 +166,7 @@ jobs:
       - run:
           name: Add back-end ip to ansible inventory
           command: |
-            BACKEND_PUBLIC_IP=$(
+            export BACKEND_PUBLIC_IP=$(
               aws ec2 describe-instances \
                --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
                --query 'Reservations[*].Instances[*].PublicIpAddress' \
@@ -261,7 +261,7 @@ jobs:
           name: Get backend url
           command: |
             cd frontend
-            BACKEND_PUBLIC_IP=$(
+            export BACKEND_PUBLIC_IP=$(
               aws ec2 describe-instances \
                --filters "Name=tag:Name,Values=backend-${CIRCLE_WORKFLOW_ID:0:7}" \
                --query 'Reservations[*].Instances[*].PublicIpAddress' \
@@ -389,18 +389,19 @@ jobs:
       - run:
           name: Get old version of workflow id
           command: |
-            aws cloudformation \
-            list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
-            --no-paginate --output text
+            export OldWorkFlow=$(
+              aws cloudformation \
+              list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+              --no-paginate --output text
+            )
+            echo $OldWorkFlow >> ~/oldWorkflowId.txt
       - run:
           name: Update cloudfront distribution
           command: |
             # your code here
-            aws cloudformation \
-            list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
-            --no-paginate --output text >> ~/oldWorkflowId.txt
+            echo "Before update new workflowid"
 
-            cat ~/oldWorkflowId.txt
+            echo "Old WorkFlowID: ${OldWorkFlow}"
             
             aws cloudformation deploy \
               --template-file .circleci/files/cloudfront.yml \
@@ -408,6 +409,9 @@ jobs:
               --parameter-overrides WorkflowID="${CIRCLE_WORKFLOW_ID:0:7}" \
               --tags project=myudaproject
 
+            echo "After update new workflowid"
+
+            echo Old WorkFlowID "${OldWorkFlow}"
             echo CIRCLE_WORKFLOW_ID "${CIRCLE_WORKFLOW_ID:0:7}"
       - persist_to_workspace:
           root: ~/
@@ -477,5 +481,5 @@ workflows:
           requires: [deploy-backend, deploy-frontend]
       - cloudfront-update:
           requires: [smoke-test]
-      - cleanup:
-          requires: [cloudfront-update]
+      # - cleanup:
+      #     requires: [cloudfront-update]
