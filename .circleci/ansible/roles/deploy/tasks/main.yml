@@ -26,7 +26,7 @@
     become: true
     command: pm2 start -f ./main.js
     args:
-      chdir: ./udapeople/dist
+      chdir: ./myudaproject/dist
     environment:
       ENVIRONMENT: production
       TYPEORM_CONNECTION: "{{ lookup('env', 'TYPEORM_CONNECTION') }}"
