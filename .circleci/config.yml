@@ -447,8 +447,7 @@ jobs:
                   aws cloudformation delete-stack --stack-name "myudaproject-frontend-${OLD_WORKFLOW_ID}"
               else
                   echo 'Cannot cleanup'
-              fi
-            
+              fi           
 
 workflows:
   myProject3_workflow:
@@ -467,7 +466,7 @@ workflows:
           requires: [test-frontend, test-backend, scan-frontend, scan-backend]
           filters:
             branches:
-              only: [develop]
+              only: [main]
       - configure-infrastructure:
           requires: [deploy-infrastructure]
       - run-migrations:
@@ -480,5 +479,5 @@ workflows:
           requires: [deploy-backend, deploy-frontend]
       - cloudfront-update:
           requires: [smoke-test]
-      - cleanup:
-          requires: [cloudfront-update]
+      # - cleanup:
+      #     requires: [cloudfront-update]
