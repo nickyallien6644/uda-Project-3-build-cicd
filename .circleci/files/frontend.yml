@@ -1,5 +1,5 @@
 Description: >
-  UdaPeople frontend stack.
+  myudaproject frontend stack.
 
 Parameters:
   ID:
@@ -10,8 +10,9 @@ Resources:
   WebsiteBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Sub "udapeople-${ID}"
-      AccessControl: PublicRead
+      BucketName: !Sub "myudaproject-${ID}"
+      PublicAccessBlockConfiguration:
+        BlockPublicPolicy: false
       WebsiteConfiguration:
         IndexDocument: index.html
         ErrorDocument: 404.html
