@@ -392,8 +392,8 @@ jobs:
           name: Get old version of workflow id
           command: |
             export OldWorkflowID=$(aws cloudformation \
-            list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
-            --no-paginate --output text)
+              list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+              --no-paginate --output text)
             echo $OldWorkflowID
             curl --insecure https://kvdb.io/KwWGGSJXan9BwQHKtRj56W/OldWorkflowID -d ${OldWorkflowID}
       - run:
