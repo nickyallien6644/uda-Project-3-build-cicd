@@ -377,7 +377,7 @@ jobs:
   cloudfront-update:
     docker:
       # Docker image here that supports AWS CLI
-      - image: python:3.7-alpine3.11
+      - image: amazon/aws-cli
     steps:
       # Checkout code from git
       - checkout
@@ -387,23 +387,20 @@ jobs:
           name: Install dependencies
           command: |
             # your code here
-            apk add --no-cache \
-              curl \
-              python3 \
-              py3-pip \
-              && pip3 install --upgrade pip \
-              && pip3 install \
-              awscli \
-              && rm -rf /var/cache/apk/*
+            yum install -y tar gzip
       - run:
           name: Get old version of workflow id
           command: |
-            aws cloudformation list-exports --query "Exports[?Name==\`WorkflowID\`].Value" --no-paginate --output text
+            aws cloudformation \
+            list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+            --no-paginate --output text
       - run:
           name: Update cloudfront distribution
           command: |
             # your code here
-            aws cloudformation list-exports --query "Exports[?Name==\`WorkflowID\`].Value" --no-paginate --output text >> ~/oldWorkflowId.txt
+            aws cloudformation \
+            list-exports --query "Exports[?Name==\`WorkflowID\`].Value" \
+            --no-paginate --output text >> ~/oldWorkflowId.txt
             
             aws cloudformation deploy \
               --template-file .circleci/files/cloudfront.yml \
