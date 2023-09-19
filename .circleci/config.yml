@@ -415,10 +415,6 @@ jobs:
 
             cat ~/oldWorkflowId.txt
             echo CIRCLE_WORKFLOW_ID "${CIRCLE_WORKFLOW_ID:0:7}"
-      - persist_to_workspace:
-          root: ~/
-          paths:
-            - oldWorkflowId.txt
        # Here's where you will add some code to rollback on failure  
       - revert-migrations:
           id: "${CIRCLE_WORKFLOW_ID:0:7}"
