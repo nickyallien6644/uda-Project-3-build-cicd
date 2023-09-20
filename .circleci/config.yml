@@ -500,3 +500,4 @@ workflows:
           requires: [cloudfront-update]
       - notify:
           context: slack-secrets
+          requires: [cleanup]
