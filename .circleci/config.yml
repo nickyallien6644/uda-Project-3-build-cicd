@@ -32,7 +32,7 @@ commands:
           when: on_fail
           # Add when this will run
           command: |
-            SUCCESS=$(curl --insecure  https://kvdb.io/${KVDB_BUCKET_ID}/migration_<<parameters.id>>)
+            SUCCESS=$(curl --insecure  https://kvdb.io/KwWGGSJXan9BwQHKtRj56W/migration_<<parameters.id>>)
             echo ${SUCCESS}
             if [[ ${SUCCESS} == 1 ]]; then
                 cd ~/project/backend
