@@ -444,7 +444,27 @@ jobs:
               else
                   echo 'Cannot cleanup'
               fi
-            
+  notify:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - slack/notify:
+          custom: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "Server notification",
+                      "text": "*Your server warning status*",
+                      "emoji": true
+                    }
+                  ]
+                }
+              ]
+            }
+          event: always          
 
 workflows:
   myProject3_workflow:
@@ -478,3 +498,5 @@ workflows:
           requires: [smoke-test]
       - cleanup:
           requires: [cloudfront-update]
+      - notify:
+          context: slack-secrets
