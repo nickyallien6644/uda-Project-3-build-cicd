@@ -426,11 +426,13 @@ jobs:
             name: Install dependencies
             command: |
               yum install -y tar gzip
+        - attach_workspace:
+            at: ~/
         - run:
             name: Cleanup
             command: |
               # your code here
-              echo "***Value clean up base on workflow ID***""
+              echo "***Value clean up base on workflow ID***"
               cat ~/oldWorkflowId.txt
               OLD_WORKFLOW_ID=$(cat ~/oldWorkflowId.txt)
 
