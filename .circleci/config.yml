@@ -439,7 +439,7 @@ jobs:
               echo Old_WORKFLOW_ID "${OLD_WORKFLOW_ID}"
               echo New_WORKFLOW_ID "${CIRCLE_WORKFLOW_ID:0:7}"
 
-              if [[! -z "${OLD_WORKFLOW_ID}" && "${CIRCLE_WORKFLOW_ID:0:7}" != "${OLD_WORKFLOW_ID}" ]]; 
+              if [[ ! -z "${OLD_WORKFLOW_ID}" && "${CIRCLE_WORKFLOW_ID:0:7}" != "${OLD_WORKFLOW_ID}" ]]; 
               then
                   aws s3 rm "s3://myudaproject-${OLD_WORKFLOW_ID}" --recursive
                   aws cloudformation delete-stack --stack-name "myudaproject-backend-${OLD_WORKFLOW_ID}"
