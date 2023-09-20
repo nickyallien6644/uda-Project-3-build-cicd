@@ -448,23 +448,18 @@ jobs:
     docker:
       - image: cimg/base:stable
     steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: npm install
+      - run: npm test
       - slack/notify:
-          custom: |
-            {
-              "blocks": [
-                {
-                  "type": "section",
-                  "fields": [
-                    {
-                      "type": "Server notification",
-                      "text": "*Your server warning status*",
-                      "emoji": true
-                    }
-                  ]
-                }
-              ]
-            }
-          event: always          
+          event: pass
+          template: success_tagged_deploy_1
+      - slack/notify:
+          event: fail
+          mentions: "@Quoc Vinh Hua"
+          template: basic_fail_1          
 
 workflows:
   myProject3_workflow:
@@ -500,4 +495,3 @@ workflows:
           requires: [cloudfront-update]
       - notify:
           context: slack-secrets
-          requires: [cleanup]
